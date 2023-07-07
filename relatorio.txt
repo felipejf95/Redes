@@ -1,0 +1,4 @@
+a parte 1 foi implementada com uma lista e uma variavel de numero de sequencia esperado
+a parte 2 foi implementada com uma função de enviar ack e receber ack na parte do servidor e cliente, respectivamente. 
+
+o numero de sequencia está sendo incrementado conforme o fluxo de bytes. Para isso, a o numero de sequencia esta sendo incrementado com o tamanho em bytes da mensagem
