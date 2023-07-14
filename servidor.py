@@ -15,6 +15,8 @@ pacotes_recebidos = []
 prox_numero_seq = 0
 bufferSize = 20* 1024  # Buffer de Tamanho T = 20
 packetSize = 1024  # Pacotes de Tamanho M = 1024
+tamJanela = 0
+cwnd = 1
 
 # Função para processar um pacote recebido
 # def processa_pacote()
@@ -24,6 +26,22 @@ def envia_ack(num_ack, addr):
     msg_ack = str(num_ack).encode()
     UdpServerSocket.sendto(msg_ack, addr)
     print('Proximo nº de seq. esperado: '+ str(prox_numero_seq))
+    
+
+def atualiza_janela():
+    global tamJanela
+    tamJanela = cwnd
+    
+    
+def recebe_tamJanela():
+    global cwnd
+    msg_tamJanela, addres = UdpServerSocket.recvfrom(bufferSize)
+    cwnd = int(msg_tamJanela)    
+    print('Tamanho da janela: ' + str(cwnd))
+    
+
+recebe_tamJanela()      # Recebe o tamanho da janela do definido pelo cliente
+
 
 
 print('Servidor iniciado.')
@@ -35,6 +53,8 @@ while True:
     # Trata os dados recebidos em numero de sequencia e dado    
     num_seq, dados = data.split(b':', 1)
     num_seq = int(num_seq)
+    
+    atualiza_janela()
        
     # Verificação do tamanho da janela deslizante
     if bufferSize < 10 * packetSize:
@@ -55,7 +75,9 @@ while True:
             _, pacote = lista.heappop(pacotes_recebidos)  
             
             # Verifica se ha espaço no buffer
-            if len(pacotes_recebidos) < bufferSize:        
+            print(len(pacotes_recebidos))
+            print(tamJanela)
+            if len(pacotes_recebidos) < tamJanela:        
                 # Processa o pacote
                 # função para processar o pacote 
                 print ('Pacote recebido: ', pacote.decode())
