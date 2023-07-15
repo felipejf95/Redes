@@ -13,9 +13,9 @@ UdpServerSocket.bind((host, port))
 
 pacotes_recebidos = [] 
 prox_numero_seq = 0
-bufferSize = 20* 1024  # Buffer de Tamanho T = 20
+bufferSize = (20 * 1024)  # Buffer de Tamanho T = 20
 packetSize = 1024  # Pacotes de Tamanho M = 1024
-tamJanela = 0
+tamJanela = 10 * packetSize
 cwnd = 1
 
 # Função para processar um pacote recebido
@@ -30,7 +30,7 @@ def envia_ack(num_ack, addr):
 
 def atualiza_janela():
     global tamJanela
-    tamJanela = cwnd
+    tamJanela = min(cwnd, len(pacotes_recebidos))
     
     
 def recebe_tamJanela():
@@ -42,7 +42,7 @@ def recebe_tamJanela():
 
 recebe_tamJanela()      # Recebe o tamanho da janela do definido pelo cliente
 
-
+tamPacote = True # Flag para controlar primeira mensagem: tamanho do pacote
 
 print('Servidor iniciado.')
 
@@ -50,11 +50,21 @@ while True:
     # Recebe dados do cliente    
     data, address = UdpServerSocket.recvfrom(bufferSize)
     
-    # Trata os dados recebidos em numero de sequencia e dado    
-    num_seq, dados = data.split(b':', 1)
-    num_seq = int(num_seq)
+    if tamPacote:
+        tamanho = int(data)
+        print('Tamanho do pacote: ', tamanho )
+        tamPacote = False
+        continue
     
-    atualiza_janela()
+    # Trata os dados recebidos em numero de sequencia e dado    
+    split_data = data.split(b':::')
+    if len(split_data) == 2:
+        num_seq, dados = split_data
+        num_seq = int(num_seq)
+    else:
+        print('Formato inválido da mensagem recebida.')
+        continue
+    
        
     # Verificação do tamanho da janela deslizante
     if bufferSize < 10 * packetSize:
@@ -62,31 +72,30 @@ while True:
         exit()
     
     # Verifica se o pacote recebido está dentro da janela deslizante
-    if prox_numero_seq <= num_seq < prox_numero_seq + bufferSize:
+    print('Numero de sequencia esperado', prox_numero_seq)
+    print('Numero de sequencia recebido', num_seq)
+    print('tamanho da janela: ', tamJanela)
+    print(prox_numero_seq + bufferSize)
+    if prox_numero_seq <= num_seq < (prox_numero_seq + bufferSize):
         
         # Adiciona o pacote recebido à lista
         lista.heappush(pacotes_recebidos, (num_seq, dados))
+        atualiza_janela()
         
         # Verifica se o pacote recebido é o próximo na ordem
-        print(pacotes_recebidos[0][0])
-        print(prox_numero_seq)
+        if (num_seq - prox_numero_seq) <= 25:
+            prox_numero_seq = num_seq
         while pacotes_recebidos and pacotes_recebidos[0][0] == prox_numero_seq:
             # Remove da fila
             _, pacote = lista.heappop(pacotes_recebidos)  
             
             # Verifica se ha espaço no buffer
-            print(len(pacotes_recebidos))
-            print(tamJanela)
-            if len(pacotes_recebidos) < tamJanela:        
-                # Processa o pacote
-                # função para processar o pacote 
-                print ('Pacote recebido: ', pacote.decode())
-                        
+            if len(pacotes_recebidos) < tamJanela:                        
                 # Incrementa numero de sequencia esperado                
                 prox_numero_seq += len(pacote)                
                 
                 # Exibe os dados recebidos   
-                print('Mensagem recebida ', data.decode()) 
+                #print('Mensagem recebida ', data.decode()) 
                 
                 # Envia uma resposta ao cliente    
                 envia_ack(prox_numero_seq, address)

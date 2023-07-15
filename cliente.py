@@ -46,15 +46,15 @@ def atualiza_janela(numACK):
 tamanho_janela()                    # Passa para o remente o tamanho da janela deslizante
 
 # Nome do arquivo a ser enviado
-#file_name = 'arquivo.txt'
-#
-## Verifica o tamanho do arquivo
-#file_size = os.path.getsize(file_name)
-#print('Tamanho do arquivo:', file_size)
+file_name = 'verificacao.txt'
+
+# Verifica o tamanho do arquivo
+file_size = os.path.getsize(file_name)
+print('Tamanho do arquivo:', file_size)
 
 # Envia o tamanho do arquivo para o servidor
-# file_size_message = str(file_size).encode()
-# UDPClientSocket.sendto(file_size_message, (host, port))
+file_size_message = str(file_size).encode()
+UDPClientSocket.sendto(file_size_message, (host, port))
 
 
     
@@ -63,43 +63,50 @@ tempoInicio = time.time()
 bytes_enviados = 0
 throughput_values = []
 
-while True:
-    # Solicita que o usuário digite uma mensagem
-    message = input('Digite uma mensagem para enviar ao servidor (ou digite "sair" para encerrar): ')
+# abre o arquivo que sera enviado
+with open(file_name, 'rb') as file:
     
-    if message == 'sair':
-        break
-    
-    # Pacote com o numero de sequencia 
-    pacote = f"{num_seq}:{message}".encode()
-    
-    # Envia a mensagem para o servidor
-    UDPClientSocket.sendto(pacote, (host, port)) 
-    
-    print(num_seq)
-    # Incrementando o numero de sequencia conforme o fluxo de bytes    
-    num_seq += len(message)
-    print(num_seq)    
-    
-    # Recebe o ACK acumulativo
-    recebe_ack()    
-    
-    # Exibe a resposta recebida
-    print(msg)
-    
-    # Atualiza o tamanho total de bytes enviados
-    bytes_enviados += len(pacote)
-    
-    # Calcula a vazão atual
-    current_time = time.time()
-    elapsed_time = current_time - tempoInicio
-    throughput = bytes_enviados / elapsed_time
-    
-    # Adiciona o valor de vazão à lista
-    throughput_values.append(throughput)
-    
-    # Imprime a vazão atual
-    print('Vazão atual:', throughput, 'bytes/segundo')
+    while True:
+        # Lê os dados do arquivo
+        message = file.read(bufferSize)
+        
+        if not message:
+            # Fim do arquivo
+            break
+        
+        #num_seq += len(message)       
+        
+        # Pacote com o numero de sequencia 
+        print(num_seq)
+        pacote = f"{num_seq}:::{message}".encode()
+        
+        # Envia a mensagem para o servidor
+        UDPClientSocket.sendto(pacote, (host, port)) 
+        
+        print('Numero de sequencia atual: ', num_seq)
+        # Incrementando o numero de sequencia conforme o fluxo de bytes    
+        num_seq += len(pacote)-4
+        print('Proximo numero de sequencia: ', num_seq)    
+        
+        # Recebe o ACK acumulativo
+        recebe_ack()    
+        
+        # Exibe a resposta recebida
+        print(msg)
+        
+        # Atualiza o tamanho total de bytes enviados
+        bytes_enviados += len(pacote)
+        
+        # Calcula a vazão atual
+        current_time = time.time()
+        elapsed_time = current_time - tempoInicio
+        throughput = bytes_enviados / elapsed_time
+        
+        # Adiciona o valor de vazão à lista
+        throughput_values.append(throughput)
+        
+        # Imprime a vazão atual
+        print('Vazão atual:', throughput, 'bytes/segundo')
     
 # Fecha o socket do cliente
 UDPClientSocket.close()
