@@ -3,6 +3,23 @@ import os
 import time
 import matplotlib.pyplot as plt
 
+# Instruções de Compilação e Execução:
+
+# 1. Certifique-se de ter o Python instalado em seu sistema.
+
+# 2. Salve este arquivo como "cliente.py".
+
+# 3. Abra o terminal ou prompt de comando e navegue até o diretório onde o arquivo "cliente.py" está localizado.
+
+# 4. Para executar o cliente:
+#    - No terminal ou prompt de comando, execute o comando: python3 nome_do_arquivo.py cliente
+#    - Para testar o envio do do arquivo, forneca o caminho e nome do arquivo quando solicitado.
+
+# Notas:
+# - Certifique-se de fornecer o endereço IP e a porta corretos para a comunicação entre o servidor e o cliente no trecho abaixo.
+
+
+
 
 # Configurações do cliente
 host = '127.0.0.1'  # Endereço IP do servidor
@@ -16,14 +33,16 @@ UDPClientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 num_seq = 0
 tamJanela = bufferSize
 cwnd = 1
-sstresh = 16
+ssthresh = 16
+numACK = 0
 
 msg = ''
 
 def recebe_ack():
+    global numACK
     ack, _ = UDPClientSocket.recvfrom(bufferSize)
-    num_ack = int(ack)
-    print('ACK acumulativo recebido: ', num_ack)
+    numACK = int(ack)
+    print('ACK acumulativo recebido: ', numACK)
     msg = ack.decode()
     
 
@@ -46,7 +65,7 @@ def atualiza_janela(numACK):
 tamanho_janela()                    # Passa para o remente o tamanho da janela deslizante
 
 # Nome do arquivo a ser enviado
-file_name = 'verificacao.txt'
+file_name = input("Caminho do arquivo a ser enviado: ")
 
 # Verifica o tamanho do arquivo
 file_size = os.path.getsize(file_name)
@@ -76,8 +95,7 @@ with open(file_name, 'rb') as file:
         
         #num_seq += len(message)       
         
-        # Pacote com o numero de sequencia 
-        print(num_seq)
+        # Pacote com o numero de sequencia         
         pacote = f"{num_seq}:::{message}".encode()
         
         # Envia a mensagem para o servidor
@@ -90,6 +108,8 @@ with open(file_name, 'rb') as file:
         
         # Recebe o ACK acumulativo
         recebe_ack()    
+        
+        atualiza_janela(numACK)
         
         # Exibe a resposta recebida
         print(msg)

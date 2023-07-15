@@ -1,6 +1,22 @@
 import socket
 import heapq as lista
 
+# Instruções de Compilação e Execução:
+
+# 1. Certifique-se de ter o Python instalado em seu sistema.
+
+# 2. Salve este arquivo como "servidor.py".
+
+# 3. Abra o terminal ou prompt de comando e navegue até o diretório onde o arquivo "servidor.py" está localizado.
+
+# 4. Para executar o servidor:
+#    - No terminal ou prompt de comando, execute o comando: python3 nome_do_arquivo.py servidor
+
+# Notas:
+# - Certifique-se de fornecer o endereço IP e a porta corretos para a comunicação entre o servidor e o cliente no trecho abaixo.
+
+
+
 # Configurações do servidor
 host = '127.0.0.1'  # Endereço IP do servidor
 port = 20001  # Porta do servidor
@@ -73,9 +89,7 @@ while True:
     
     # Verifica se o pacote recebido está dentro da janela deslizante
     print('Numero de sequencia esperado', prox_numero_seq)
-    print('Numero de sequencia recebido', num_seq)
-    print('tamanho da janela: ', tamJanela)
-    print(prox_numero_seq + bufferSize)
+    print('Numero de sequencia recebido', num_seq)  
     if prox_numero_seq <= num_seq < (prox_numero_seq + bufferSize):
         
         # Adiciona o pacote recebido à lista
